@@ -1,3 +1,4 @@
+import bottle
 from bottle import get, post, run, request, response
 import sqlite3
 import json
@@ -5,6 +6,22 @@ import hashlib
 import datetime
 
 conn = sqlite3.connect('database.db')
+
+
+# the decorator
+# needed for CORS (Cross-Origin Resource Sharing)
+def enable_cors(fn):
+    def _enable_cors(*args, **kwargs):
+        # set CORS headers
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+        if bottle.request.method != 'OPTIONS':
+            # actual request; reply with the actual response
+            return fn(*args, **kwargs)
+
+    return _enable_cors
 
 @get('/ping')
 def ping():
@@ -116,6 +133,7 @@ def reset_db():
     return json.dumps({"status": "ok"}, indent=4)
 
 @get('/customers')
+@enable_cors
 def get_customers():
     response.content_type = 'application/json'
     c = conn.cursor()
@@ -131,6 +149,7 @@ def get_customers():
     return json.dumps({"customers" : s}, indent = 4)
 
 @get('/recipes')
+@enable_cors
 def get_recipes():
     response.content_type = 'application/json'
     c = conn.cursor()
@@ -149,6 +168,7 @@ def get_recipes():
     return json.dumps({"recipes": s}, indent = 4)
 
 @get('/ingredients')
+@enable_cors
 def get_ingredients():
     response.content_type = 'application/json'
     c = conn.cursor()
@@ -163,6 +183,7 @@ def get_ingredients():
     return json.dumps({"ingredients" : s}, indent = 4)
 
 @get('/pallets')
+@enable_cors
 def get_pallets():
     response.content_type = 'application/json'
     c = conn.cursor()
@@ -241,6 +262,7 @@ def put_pallets():
     return json.dumps({"status": "ok", "id": pallet_id[0]}, indent=4)
 
 @get('/cookies')
+@enable_cors
 def get_cookies():
     response.content_type = 'application/json'
     c = conn.cursor()
